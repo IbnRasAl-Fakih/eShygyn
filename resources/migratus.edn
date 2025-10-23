@@ -1,0 +1,6 @@
+{:store :database
+ :migration-dir "migrations"
+ :db {:dbtype "postgresql"
+      :dbname "eshygyn"
+      :user "postgres"
+      :password "qwerty123"}}

@@ -1,0 +1,88 @@
+; Jacking in...
+; Connecting using "deps.edn" project type.
+; You can make Calva auto-select this.
+;   - See https://calva.io/connect-sequences/
+; 
+
+; Starting Jack-in: pushd c:\Users\User\Desktop\eShygyn & java -jar c:\Users\User\.vscode\extensions\betterthantomorrow.calva-2.0.538\deps.clj.jar -Sdeps "{:deps {nrepl/nrepl {:mvn/version,\"1.3.1\"},cider/cider-nrepl {:mvn/version,\"0.55.4\"}}}" -M -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]" & popd
+; Using host:port kubernetes.docker.internal:56531 ...
+; Hooking up nREPL sessions ...
+; Connected session: clj
+; Evaluating code from settings: 'calva.autoEvaluateCode.onConnect.clj'
+nil
+clj꞉user꞉> 
+; Jack-in done.
+clj꞉user꞉> 
+nil
+clj꞉eshygyn.db.config꞉> 
+(env :DBNAME)
+"eshygyn"
+clj꞉eshygyn.db.config꞉> 
+(env :USER)
+"postgres"
+clj꞉eshygyn.db.config꞉> 
+(get-all-users)
+; Syntax error compiling at (c:\Users\User\Desktop\eShygyn\.calva\output-window\output.calva-repl:24:1).
+; Unable to resolve symbol: get-all-users in this context
+clj꞉eshygyn.db.config꞉> 
+; Syntax error compiling at (c:\Users\User\Desktop\eShygyn\src\eshygyn\db\config.clj:14:3).
+; Unable to resolve symbol: datasource in this context
+clj꞉eshygyn.db.config꞉> 
+nil
+clj꞉eshygyn.db.config꞉> 
+(get-all-users)
+; Execution error (IllegalStateException) at eshygyn.db.config/eval13798 (REPL:33).
+; Attempting to call unbound fn: #'eshygyn.db.config/get-all-users
+clj꞉eshygyn.db.config꞉> 
+(get-all-users)
+; Execution error (IllegalStateException) at eshygyn.db.config/eval13800 (REPL:37).
+; Attempting to call unbound fn: #'eshygyn.db.config/get-all-users
+clj꞉eshygyn.db.config꞉> 
+#'eshygyn.db.config/db-config
+clj꞉eshygyn.db.config꞉> 
+#'eshygyn.db.config/datasource
+clj꞉eshygyn.db.config꞉> 
+(get-all-users)
+; Execution error (IllegalStateException) at eshygyn.db.config/eval13802 (REPL:45).
+; Attempting to call unbound fn: #'eshygyn.db.config/get-all-users
+clj꞉eshygyn.db.config꞉> db-config
+{:dbtype "postgresql", :dbname "eshygyn", :user "postgres", :password "qwerty123", :host "localhost", :port "5432"}
+clj꞉eshygyn.db.config꞉> 
+datasource
+#object[next.jdbc.connection$url_PLUS_etc$reify__10596 0x225a3a2f "jdbc:postgresql://localhost:5432/eshygyn"]
+clj꞉eshygyn.db.config꞉> 
+(get-all-users)
+; Execution error (IllegalStateException) at eshygyn.db.config/eval13804 (REPL:54).
+; Attempting to call unbound fn: #'eshygyn.db.config/get-all-users
+clj꞉eshygyn.db.config꞉> 
+#'eshygyn.db.sql-maps/get-all-users
+clj꞉eshygyn.db.sql-maps꞉> 
+nil
+clj꞉eshygyn.db.config꞉> 
+(get-all-users)
+; Execution error (IllegalStateException) at eshygyn.db.config/eval13855 (REPL:62).
+; Attempting to call unbound fn: #'eshygyn.db.config/get-all-users
+clj꞉eshygyn.db.config꞉> 
+#'eshygyn.db.config/get-all-users
+clj꞉eshygyn.db.config꞉> 
+(get-all-users)
+[]
+clj꞉eshygyn.db.config꞉> 
+nil
+clj꞉eshygyn.db.db꞉> 
+; Syntax error compiling at (c:\Users\User\Desktop\eShygyn\src\eshygyn\db\db.clj:13:48).
+; No such var: sql-maps/create-user
+clj꞉eshygyn.db.db꞉> 
+#'eshygyn.db.sql-maps/create-user
+clj꞉eshygyn.db.sql-maps꞉> 
+#'eshygyn.db.db/create-user
+clj꞉eshygyn.db.db꞉> 
+(get-all-users)
+[]
+clj꞉eshygyn.db.db꞉> 
+(create-user "87770146919" "ijwnfalwf124plaf")
+[#:next.jdbc{:update-count 1}]
+clj꞉eshygyn.db.db꞉> 
+(get-all-users)
+[#:users{:id #uuid "0c8ba670-cff8-4881-ad80-8db87698ef25", :phone "87770146919", :chat_id "ijwnfalwf124plaf"}]
+clj꞉eshygyn.db.db꞉> 

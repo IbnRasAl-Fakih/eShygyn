@@ -1,0 +1,9 @@
+{
+ :deps {seancorfield/next.jdbc {:mvn/version "1.2.659"}
+        org.postgresql/postgresql {:mvn/version "42.7.3"}
+        com.github.seancorfield/honeysql {:mvn/version "2.7.1350"}
+        migratus/migratus {:mvn/version "1.4.3"}
+        environ/environ {:mvn/version "1.2.0"}
+        lynxeyes/dotenv {:mvn/version "1.1.0"}}
+ :paths ["src", "resources"]
+ }
