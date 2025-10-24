@@ -12,6 +12,11 @@ classes/
 *.jar
 *.war
 *.zip
+pom.xml
+pom.xml.asc
+/lib/
+/checkouts/
+.nrepl-port
 
 # -----------------------------------------------------------------
 # 2. Инструменты и IDE (VS Code / Calva / LSP)
