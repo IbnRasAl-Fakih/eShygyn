@@ -6,4 +6,3 @@
 (def db-config {:dbtype (env :DBTYPE) :dbname (env :DBNAME) :user (env :USER) :password (env :PASSWORD) :host (env :HOST) :port (env :PORT)})
 
 (def datasource (jdbc/get-datasource db-config))
-

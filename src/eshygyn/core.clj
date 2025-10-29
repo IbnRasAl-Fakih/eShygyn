@@ -1,6 +1,10 @@
 (ns eshygyn.core
-  (:require [eshygyn.db.config :as db.config]))
+  (:require [eshygyn.tg.tg-core :as tcore]))
+
+(defonce running? (atom true))
 
 (defn -main []
-  (println "Hello World!")
-  (println (db.config/get-all-users)))
+  (println "Бот запущен. Ожидаю сообщения...")
+  (while @running?
+    (tcore/poll-updates-caller)
+    (Thread/sleep 1000)))
