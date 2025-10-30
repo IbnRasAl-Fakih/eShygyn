@@ -5,10 +5,10 @@
   {:select [:*] 
    :from [:users]})
 
-(defn create-user [phone chat_id]
+(defn create-user [chat_id first_name username]
   {:insert-into [:users]
-   :columns [:phone :chat_id]
-   :values [{:phone phone, :chat_id chat_id}]})
+   :columns [:chat_id :first_name :username]
+   :values [{:chat_id chat_id, :first_name first_name, :username username}]})
 
 (defn get-expences-exact-day [date]
   {:select [*]
@@ -25,3 +25,8 @@
   {:insert-into [:expences]
    :columns [:user_id :category :amount :date]
    :values [{:user_id user_id, :category category, :amount amount, :date date}]})
+
+(defn get-user [chat_id]
+  {:select [:*]
+   :from [:users]
+   :where [:= :chat_id chat_id]})

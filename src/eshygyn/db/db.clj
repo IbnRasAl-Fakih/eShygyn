@@ -9,8 +9,8 @@
 (defn get-all-users []
   (jdbc/execute! config/datasource (sql/format (sql-maps/get-all-users))))
 
-(defn create-user [phone chat_id]
-  (jdbc/execute! config/datasource (sql/format (sql-maps/create-user phone chat_id))))
+(defn create-user [chat_id first_name username]
+  (jdbc/execute! config/datasource (sql/format (sql-maps/create-user chat_id first_name username))))
 
 (defn get-expences-exact-day [date]
   (jdbc/execute! config/datasource (sql/format (sql-maps/get-expences-exact-day date))))
@@ -20,3 +20,6 @@
 
 (defn create-expence [user_id category amount date]
   (jdbc/execute! config/datasource (sql/format (sql-maps/create-expence user_id category amount date))))
+
+(defn is-authorized [chat_id]
+  (< 0 (count (jdbc/execute! config/datasource (sql/format (sql-maps/get-user (str chat_id)))))))
