@@ -1,6 +1,6 @@
 create table expences (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid,
+    user_id int,
     category varchar(255),
     amount double precision,
     date timestamptz,

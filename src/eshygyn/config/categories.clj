@@ -1,8 +1,8 @@
 (ns eshygyn.config.categories)
 
 (def categories
-  [{:id "food"      :title "🍔 Еда"}
-   {:id "transport" :title "🚌 Транспорт"}
-   {:id "coffee"    :title "☕ Кофе"}
-   {:id "rent"      :title "🏠 Аренда"}
-   {:id "other"     :title "🧩 Другое"}])
+  [{:id "food"      :emoji "🍔" :title "Еда"}
+   {:id "transport" :emoji "🚌" :title "Транспорт"}
+   {:id "coffee"    :emoji "☕" :title "Кофе"}
+   {:id "rent"      :emoji "🏠" :title "Аренда"}
+   {:id "other"     :emoji "🧩" :title "Другое"}])

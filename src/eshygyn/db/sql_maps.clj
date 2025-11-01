@@ -5,10 +5,10 @@
   {:select [:*] 
    :from [:users]})
 
-(defn create-user [chat_id first_name username]
+(defn create-user [user-id chat_id first_name username]
   {:insert-into [:users]
-   :columns [:chat_id :first_name :username]
-   :values [{:chat_id chat_id, :first_name first_name, :username username}]})
+   :columns [:id :chat_id :first_name :username]
+   :values [{:id user-id :chat_id chat_id, :first_name first_name, :username username}]})
 
 (defn get-expences-exact-day [date]
   {:select [*]

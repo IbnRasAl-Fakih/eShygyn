@@ -8,9 +8,9 @@
 
 (def user-session (atom {}))
 
+(def fmt-out (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm"))
+
 (def almaty-tz (ZoneId/of "Asia/Almaty"))
-(def fmt-yy   (DateTimeFormatter/ofPattern "dd.MM.yy HH:mm"))
-(def fmt-yyyy (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm"))
 
 (def categories config-categories/categories)
 
@@ -18,8 +18,8 @@
   (let [cats (seq categories)]
     {:inline_keyboard
      (->> (or cats [])
-          (map (fn [{:keys [id title]}]
-                 [{:text title :callback_data (str "CAT_" (str/upper-case id))}]))
+          (map (fn [{:keys [id emoji title]}]
+                 [{:text (str emoji " " title) :callback_data (str "CAT_" (str/upper-case id))}]))
           (map vec)
           vec)}))
 
@@ -36,16 +36,18 @@
 
 (defn parse-datetime [s]
   (when s
-    (let [txt (str/trim s)]
-      (or
-       (try
-         (-> (LocalDateTime/parse txt fmt-yy)
-             (.atZone almaty-tz))
-         (catch DateTimeParseException _ nil))
-       (try
-         (-> (LocalDateTime/parse txt fmt-yyyy)
-             (.atZone almaty-tz))
-         (catch DateTimeParseException _ nil))))))
+    (let [txt (-> (str/trim s)
+                  (cond-> (re-matches #".*\d{2}:\d{2}$" (str/trim s))
+                    (str ":00")))
+          fmt1 (DateTimeFormatter/ofPattern "dd.MM.yy HH:mm:ss")
+          fmt2 (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm:ss")]
+      (some #(try
+               (-> (LocalDateTime/parse txt %)
+                   (.atZone almaty-tz)
+                   (.withNano 0)
+                   (.toOffsetDateTime))
+               (catch Exception _ nil))
+            [fmt1 fmt2]))))
 
 (defn set-stage! [chat-id stage & kvs]
   (swap! user-session
@@ -67,11 +69,8 @@
   (get @user-session chat-id))
 
 (defn handle-add-cmd [bot chat-id]
-  (try
-    (set-stage! chat-id :choose-category {:category nil :amount nil :when nil})
-    (tg/send-message bot chat-id "➕ Добавляем расход.\nВыберите категорию:" {:reply_markup (categories-kb)})
-    (catch Exception e
-      (println "\033[91mERROR\033[0m " "Ошибка в handle-add-cmd: " e))))
+  (set-stage! chat-id :choose-category {:category nil :amount nil :when nil})
+  (tg/send-message bot chat-id "➕ Добавляем расход.\nВыберите категорию:" {:reply_markup (categories-kb)}))
 
 (defn find-category [cat-id]
-  (some #(when (= (:id (str/upper-case %)) cat-id) %) categories))
+  (some #(when (= (str/upper-case (:id %)) cat-id) %) categories))

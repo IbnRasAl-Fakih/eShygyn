@@ -1,5 +1,6 @@
 create table users (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    phone varchar(20),
-    chat_id varchar(255)
+    id int PRIMARY KEY,
+    chat_id varchar(255),
+    first_name varchar(255),
+    username varchar(255)
 );
