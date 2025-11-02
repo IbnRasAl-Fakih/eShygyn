@@ -1,25 +1,32 @@
 (ns eshygyn.tg.commands
-  (:require [telegrambot-lib.core :as tg]
-            
-            [eshygyn.tg.new-expense :as new-expense]
-            [eshygyn.db.db :as db]))
+  (:require [eshygyn.tg.new-expense :as new-expense]
+            [eshygyn.db.db :as db]
+            [eshygyn.tg.messages :as messages]))
 
 (defn start [bot chat-id]
-  (tg/send-message bot chat-id "Привет! 👋 Я твой Expense Tracker бот. Отправь мне любое сообщение."))
+  (messages/start bot chat-id))
 
 (defn authorize [bot user-id chat-id first-name username]
   (try
     (if (db/is-authorized chat-id)
-      (tg/send-message bot chat-id "ℹ️ Вы уже авторизованы!\nНет необходимости проходить авторизацию повторно ✅\n\nВы можете сразу перейти к работе:\n• 📊 Просмотреть расходы — /stats\n• ➕ Добавить новую операцию — /add\n• ⚙️ Выйти из аккаунта — /logout" {:reply_markup {:remove_keyboard true}})
+      (messages/already-authorized bot chat-id)
       
       (do
         (db/create-user user-id chat-id first-name username)
-        (tg/send-message bot chat-id (str "✅ Вы успешно авторизовались!\nДобро пожаловать, " first-name "\n\nТеперь вы можете:\n• 📊 Просматривать свои расходы\n• ➕ Добавлять новые транзакции\n• 📅 Смотреть статистику по дням и категориям\n\nВведите /help, чтобы увидеть доступные команды."))))
+        (messages/successfully-authorized bot chat-id first-name)))
     
     (catch Exception e
-      (println (str "\033[91mERROR\033[0m" "Caught a exception while creating user: " (.getMessage e)))
-      (tg/send-message bot chat-id "⚠️ Не удалось авторизоваться.\n\n• Попробуйте перезапустить бота.\n• Или введите команду /start для повторной попытки."))))
+      (println (str "\033[91mERROR\033[0m" "Caught a exception while creating user: " e))
+      (messages/authorize-error bot chat-id))))
 
 (defn cancel [bot chat-id]
   (new-expense/clear-session! chat-id)
-  (tg/send-message bot chat-id "❌ Добавление расхода отменено."))
+  (messages/cancel bot chat-id))
+
+(defn add-expense [bot chat-id]
+  (new-expense/set-stage! chat-id :choose-category {:category nil :amount nil :when nil})
+  (messages/next-category bot chat-id (new-expense/categories-kb)))
+
+(defn change-category [bot chat-id]
+  (new-expense/set-stage! chat-id :choose-category {:category nil :amount nil :when nil})
+  (messages/change-category bot chat-id (new-expense/categories-kb)))

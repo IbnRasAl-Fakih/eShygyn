@@ -3,7 +3,8 @@
             [dotenv :refer [env]]
 
             [eshygyn.tg.handle-messages :as handle-messages]
-            [eshygyn.tg.handle-callback-queries :as handle-callback-queries]))
+            [eshygyn.tg.handle-callback-queries :as handle-callback-queries]
+            [eshygyn.tg.global-functions :as global-functions]))
 
 (defonce last-offset (atom 0))
 
@@ -18,9 +19,12 @@
         (let [message (:message update)
               callback_query (:callback_query update)
               update_id (:update_id update)]
+
           (when message
+            (global-functions/delete-previous-inline-query bot (get-in message [:chat :id]) (:message_id message))
             (handle-messages/handle-message bot message))
           (when callback_query
+            (global-functions/delete-inline-query bot (get-in callback_query [:message :chat :id]) (get-in callback_query [:message :message_id]))
             (handle-callback-queries/handle-callback-query bot callback_query))
           (reset! last-offset (inc update_id)))))
     (catch Exception e

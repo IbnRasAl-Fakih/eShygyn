@@ -1,7 +1,5 @@
 (ns eshygyn.tg.handle-messages
-  (:require [telegrambot-lib.core :as tg]
-            
-            [eshygyn.db.db :as db]
+  (:require [eshygyn.db.db :as db]
             [eshygyn.tg.commands :as commands]
             [eshygyn.tg.messages :as messages]
             [eshygyn.tg.new-expense :as new-expense])
@@ -10,9 +8,9 @@
 (defn handle-message [bot message]
   (println "\033[34mINFO\033[0m" message) ; delete
   (try
-    (let [chat-id (get-in message [:chat :id])
-          text (:text message)
-          user-id (get-in message [:from :id])
+    (let [chat-id               (get-in message [:chat :id])
+          text                  (:text message)
+          user-id               (get-in message [:from :id])
           {:keys [stage draft]} (new-expense/get-session chat-id)]
       (println "\033[34mINFO\033[0m" "stage = " stage) ; delete
       (if (= text "/authorize")
@@ -22,16 +20,18 @@
           (cond
             (= text "/start") (commands/start bot chat-id)
     
-            (= text "/add") (new-expense/handle-add-cmd bot chat-id)
+            (= text "/add") (commands/add-expense bot chat-id)
     
             (= text "/cancel") (commands/cancel bot chat-id)
+
+            (= text "/change") (commands/change-category bot chat-id)
     
-            (nil? stage) (messages/unknown-message)
+            (nil? stage) (messages/unknown-message bot chat-id)
     
             (= stage :enter-amount)
             (let [amt (new-expense/parse-amount text)]
               (if (nil? amt)
-                (messages/wrong-amount)
+                (messages/wrong-amount bot chat-id)
                 (do
                   (new-expense/set-stage! chat-id :enter-time :amount amt)
                   (messages/next-time bot chat-id))))

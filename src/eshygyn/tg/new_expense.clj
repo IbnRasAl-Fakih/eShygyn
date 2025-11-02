@@ -1,6 +1,5 @@
 (ns eshygyn.tg.new-expense
-  (:require [telegrambot-lib.core :as tg]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             
             [eshygyn.config.categories :as config-categories])
   (:import (java.time ZoneId ZonedDateTime LocalDateTime)
@@ -67,10 +66,6 @@
 
 (defn get-session [chat-id]
   (get @user-session chat-id))
-
-(defn handle-add-cmd [bot chat-id]
-  (set-stage! chat-id :choose-category {:category nil :amount nil :when nil})
-  (tg/send-message bot chat-id "➕ Добавляем расход.\nВыберите категорию:" {:reply_markup (categories-kb)}))
 
 (defn find-category [cat-id]
   (some #(when (= (str/upper-case (:id %)) cat-id) %) categories))
