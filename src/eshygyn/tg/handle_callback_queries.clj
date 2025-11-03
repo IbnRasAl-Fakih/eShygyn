@@ -42,16 +42,14 @@
     
         (= data "CMD_TIME_NOW")
         (try
-          (let [{:keys [stage]} (new-expense/get-session chat-id)]
-            (if (not= stage :enter-time)
-              (let [now-odt (-> (ZonedDateTime/now almaty-tz)
-                                (.withNano 0)
-                                (.toOffsetDateTime))
-                    {:keys [category amount]} (:draft (new-expense/get-session chat-id))]
-                (println "\033[34mINFO\033[0m" (:draft (new-expense/get-session chat-id))) ; delete
-                (db/create-expence user-id category amount now-odt)
-                (new-expense/clear-session! chat-id)
-                (messages/expense_created bot chat-id category amount now-odt)))) 
+          (let [now-odt (-> (ZonedDateTime/now almaty-tz)
+                            (.withNano 0)
+                            (.toOffsetDateTime))
+                {:keys [category amount]} (:draft (new-expense/get-session chat-id))]
+            (println "\033[34mINFO\033[0m" (:draft (new-expense/get-session chat-id))) ; delete
+            (db/create-expence user-id category amount now-odt)
+            (new-expense/clear-session! chat-id)
+            (messages/expense_created bot chat-id category amount now-odt)) 
           (catch Exception e
             (println "\033[91mERROR\033[0m" "Ошибка в handle-callback-query, когда установливается время" e)))
         
