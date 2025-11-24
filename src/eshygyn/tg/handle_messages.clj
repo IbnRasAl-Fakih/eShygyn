@@ -5,6 +5,35 @@
             [eshygyn.tg.new-expense :as new-expense])
   (:import (java.time.format DateTimeFormatter DateTimeParseException)))
 
+(def listed-commands 
+  {"/start"  commands/start
+   "/add"    commands/add-expense
+   "/cancel" commands/cancel
+   "/change" commands/change-category})
+
+(defn text-not-listed-handler [bot chat-id stage user-id text draft]
+  (cond
+    (nil? stage) (messages/unknown-message bot chat-id)
+
+    (= stage :enter-amount)
+    (let [amt (new-expense/parse-amount text)]
+      (if (nil? amt)
+        (messages/wrong-amount bot chat-id)
+        (do
+          (new-expense/set-stage! chat-id :enter-time :amount amt)
+          (messages/next-time bot chat-id))))
+
+    (= stage :enter-time)
+    (let [dt (new-expense/parse-datetime text)]
+      (if (nil? dt)
+        (messages/wrong-time bot chat-id)
+        (let [{:keys [category amount]} draft]
+          (db/create-expence user-id category amount dt)
+          (new-expense/clear-session! chat-id)
+          (messages/expense_created bot chat-id category amount dt))))
+
+    :else (messages/unknown-message-with-stage bot chat-id)))
+
 (defn handle-message [bot message]
   (println "\033[34mINFO\033[0m" message) ; delete
   (try
@@ -17,36 +46,12 @@
         (commands/authorize bot user-id chat-id (get-in message [:from :first_name]) (get-in message [:from :username]))
     
         (if (db/is-authorized chat-id)
-          (cond
-            (= text "/start") (commands/start bot chat-id)
-    
-            (= text "/add") (commands/add-expense bot chat-id)
-    
-            (= text "/cancel") (commands/cancel bot chat-id)
-
-            (= text "/change") (commands/change-category bot chat-id)
-    
-            (nil? stage) (messages/unknown-message bot chat-id)
-    
-            (= stage :enter-amount)
-            (let [amt (new-expense/parse-amount text)]
-              (if (nil? amt)
-                (messages/wrong-amount bot chat-id)
-                (do
-                  (new-expense/set-stage! chat-id :enter-time :amount amt)
-                  (messages/next-time bot chat-id))))
-    
-            (= stage :enter-time)
-            (let [dt (new-expense/parse-datetime text)]
-              (if (nil? dt)
-                (messages/wrong-time bot chat-id)
-                (let [{:keys [category amount]} draft]
-                  (db/create-expence user-id category amount dt)
-                  (new-expense/clear-session! chat-id)
-                  (messages/expense_created bot chat-id category amount dt))))
-    
-            :else (messages/unknown-message-with-stage bot chat-id))
-    
+          
+          (let [function (get listed-commands text)]
+            (if (nil? function)
+              (text-not-listed-handler bot chat-id stage user-id text draft)
+              (apply function [bot chat-id]))) 
+          
           (messages/authorize bot chat-id))))
-          (catch Exception e
-            (println "\033[91mERROR\033[0m" "Ошибка в handle-message:" e))))
+    (catch Exception e
+      (println "\033[91mERROR\033[0m" "Ошибка в handle-message:" e))))
