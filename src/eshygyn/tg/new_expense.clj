@@ -11,10 +11,8 @@
 
 (def almaty-tz (ZoneId/of "Asia/Almaty"))
 
-(def categories config-categories/categories)
-
-(defn categories-kb []
-  (let [cats (seq categories)]
+(defn categories-kb [chat-id]
+  (let [cats (seq (config-categories/get-user-categories chat-id))]
     {:inline_keyboard
      (->> (or cats [])
           (map (fn [{:keys [id emoji title]}]
@@ -24,7 +22,12 @@
 
 (defn time-kb []
   {:inline_keyboard [[{:text "🕒 Текущее время" :callback_data "CMD_TIME_NOW"}]
-                     [{:text "❌ Отмена"        :callback_data "CMD_CANCEL"}]]})
+                     [{:text "15 минут назад" :callback_data "TIME_15"}]
+                     [{:text "30 минут назад" :callback_data "TIME_30"}]
+                     [{:text "1 час назад" :callback_data "TIME_60"}]
+                     [{:text "2 часа назад" :callback_data "TIME_120"}]
+                     [{:text "3 часа назад" :callback_data "TIME_180"}]
+                     [{:text "❌ Отмена" :callback_data "CMD_CANCEL"}]]})
 
 (defn parse-amount [s]
   (let [clean (-> s (str/replace #"\s+" "") (str/replace #"," "."))]
@@ -67,5 +70,5 @@
 (defn get-session [chat-id]
   (get @user-session chat-id))
 
-(defn find-category [cat-id]
-  (some #(when (= (str/upper-case (:id %)) cat-id) %) categories))
+(defn find-category [chat-id cat-id]
+  (some #(when (= (str/upper-case (:id %)) cat-id) %) (config-categories/get-user-categories chat-id)))

@@ -35,7 +35,8 @@
                    {:reply_markup (new-expense/time-kb)}))
 
 (defn wrong-time [bot chat-id]
-  (tg/send-message bot chat-id "⚠️ Неверный формат времени. Используйте формат dd.mm.yy hh:mm — например, 14.06.04 03:32"))
+  (tg/send-message bot chat-id "⚠️ Неверный формат времени. Используйте формат dd.mm.yy hh:mm — например, 14.06.04 03:32"
+                   {:reply_markup (new-expense/time-kb)}))
 
 (defn unknown-message-with-stage [bot chat-id]
   (tg/send-message bot chat-id "🤔 Я вас не понял. Нажмите /cancel и начните заново с /add"))
