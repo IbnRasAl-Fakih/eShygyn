@@ -4,8 +4,10 @@
             
             [eshygyn.db.db :as db]
             [eshygyn.tg.new-expense :as new-expense]
+            [eshygyn.tg.user-session :as user-session]
             [eshygyn.tg.commands :as commands]
-            [eshygyn.tg.messages :as messages])
+            [eshygyn.tg.messages :as messages]
+            [eshygyn.tg.category :as tg-category])
   (:import (java.time ZoneId ZonedDateTime LocalDateTime)
            (java.time.format DateTimeFormatter DateTimeParseException)))
 
@@ -13,7 +15,7 @@
 
 (def listed-commands
   {"CMD_AUTHORIZE" 
-   (fn [bot chat-id user-id callback-query] 
+   (fn [bot chat-id user-id callback-query & _] 
      (commands/authorize bot user-id chat-id (get-in callback-query [:from :first_name]) (get-in callback-query [:from :username])))
 
    "CMD_CANCEL"
@@ -21,30 +23,56 @@
      (commands/cancel bot chat-id))
    
    "CMD_TIME_NOW"
-   (fn [bot chat-id user-id & _]
+   (fn [bot chat-id user-id _ draft & _]
      (let [now-odt (-> (ZonedDateTime/now almaty-tz)
                        (.withNano 0)
                        (.toOffsetDateTime))
-           {:keys [category amount]} (:draft (new-expense/get-session chat-id))]
+           {:keys [category amount]} draft]
        (db/create-expence user-id category amount now-odt)
-       (new-expense/clear-session! chat-id)
-       (messages/expense_created bot chat-id category amount now-odt)))
+       (user-session/clear-session! chat-id)
+       (messages/expense-created bot chat-id category amount now-odt)))
    
    "CMD_CHANGE_CATEGORY"
    (fn [bot chat-id & _]
      (commands/change-category bot chat-id))
+   
+   "CMD_SKIP"
+   (fn [bot chat-id & _]
+     (commands/skip bot chat-id))
+   
+   "CMD_YES"
+   (fn [bot chat-id _ _ draft stage]
+     (case stage
+       :is-delete-expences
+       (do
+         (user-session/set-stage! chat-id :is-sure :delete-expences true)
+         (messages/is-sure bot chat-id))
+       
+       :is-sure
+       (let [{:keys [category-id delete-expences]} draft]
+         (user-session/clear-session! chat-id)
+         (tg-category/delete-category chat-id category-id delete-expences)
+         (messages/category-deleted bot chat-id))))
+   
+   "CMD_NO"
+   (fn [bot chat-id _ _ _ stage]
+     (case stage
+       :is-delete-expences
+       (do
+         (user-session/set-stage! chat-id :is-sure :delete-expences false)
+         (messages/is-sure bot chat-id))))
    })
 
-(defn query-not-listed-handler [data bot chat-id user-id]
+(defn query-not-listed-handler [data bot chat-id user-id draft]
   (cond
     (str/starts-with? data "CAT_")
     (try
       (let [cat-id (subs data 4)
-            cat    (new-expense/find-category chat-id cat-id)]
+            cat    (tg-category/find-category chat-id cat-id)]
         (if-not cat
           (println "\033[91mERROR\033[0m" "Неизвестная категория: ошибка со стороны сервера, так как пользователь только выбирает одну из выданных вариантов")
           (do
-            (new-expense/set-stage! chat-id :enter-amount :category (:title cat))
+            (user-session/set-stage! chat-id :enter-amount :category (:title cat))
             (messages/next-amount bot chat-id (:title cat)))))
       (catch Exception e
         (println "\033[91mERROR\033[0m" "Ошибка в handle-callback-query, когда выбирается категория" e)))
@@ -55,10 +83,22 @@
                       (.withNano 0)
                       (.toOffsetDateTime))
           final-time (.minusMinutes now-odt minus-time)
-          {:keys [category amount]} (:draft (new-expense/get-session chat-id))]
+          {:keys [category amount]} draft]
       (db/create-expence user-id category amount final-time)
-      (new-expense/clear-session! chat-id)
-      (messages/expense_created bot chat-id category amount final-time))
+      (user-session/clear-session! chat-id)
+      (messages/expense-created bot chat-id category amount final-time))
+    
+    (str/starts-with? data "DEL_CAT_")
+    (try
+      (let [cat-id (subs data 8)
+            cat    (tg-category/find-category chat-id cat-id)]
+        (if-not cat
+          (println "\033[91mERROR\033[0m" "Неизвестная категория: ошибка со стороны сервера, так как пользователь только выбирает одну из выданных вариантов")
+          (do
+            (user-session/set-stage! chat-id :is-delete-expences :category-id cat-id)
+            (messages/is-delete-expences bot chat-id (:title cat) (:emoji cat)))))
+      (catch Exception e
+        (println "\033[91mERROR\033[0m" "Ошибка в handle-callback-query, когда удаляется категория" e)))
 
     :else
     (messages/unknown-command bot chat-id data)))
@@ -66,15 +106,16 @@
 (defn handle-callback-query [bot callback-query]
   (println "\033[34mINFO\033[0m " callback-query) ; delete
   (try
-    (let [callback-id (:id callback-query)
-          data        (:data callback-query)
-          chat-id     (get-in callback-query [:message :chat :id])
-          user-id     (get-in callback-query [:from :id])
-          function    (get listed-commands data)] 
+    (let [callback-id           (:id callback-query)
+          data                  (:data callback-query)
+          chat-id               (get-in callback-query [:message :chat :id])
+          user-id               (get-in callback-query [:from :id])
+          function              (get listed-commands data)
+          {:keys [stage draft]} (user-session/get-session chat-id)] 
       (tg/answer-callback-query bot callback-id)
       
       (if (nil? function)
-        (query-not-listed-handler data bot chat-id user-id)
-        (apply function [bot chat-id user-id callback-query])))
+        (query-not-listed-handler data bot chat-id user-id draft)
+        (apply function [bot chat-id user-id callback-query draft stage])))
         (catch Exception e
           (println "\033[91mERROR\033[0m" "Ошибка в handle-callback-query:" e))))

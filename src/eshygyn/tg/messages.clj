@@ -9,14 +9,14 @@
                    {:reply_markup {:inline_keyboard [[{:text "Авторизоваться" :callback_data "CMD_AUTHORIZE"}]] :resize_keyboard true}}))
 
 (defn cancel [bot chat-id]
-  (tg/send-message bot chat-id "❌ Добавление расхода отменено"))
+  (tg/send-message bot chat-id "❌ Действие отменено. Если понадобится — можете начать заново."))
 
 (defn next-amount [bot chat-id category]
   (tg/send-message bot chat-id
                    (str "Введите сумму для категории «" category "»\n\nЕсли хотите выбрать другую категорию — нажмите кнопку «Изменить категорию» или введите команду /change")
                    {:reply_markup {:inline_keyboard [[{:text "Изменить категорию" :callback_data "CMD_CHANGE_CATEGORY"}]] :resize_keyboard true}}))
 
-(defn expense_created [bot chat-id category amount date]
+(defn expense-created [bot chat-id category amount date]
   (tg/send-message bot chat-id 
                    (format "✅ Расход добавлен:\n\n• Категория: %s\n• Сумма: %s\n• Время: %s" category amount (.format date new-expense/fmt-out))))
 
@@ -67,3 +67,56 @@
   (tg/send-message bot chat-id
                    "Изменение категории\nВыберите новую категорию из списка ниже 👇"
                    {:reply_markup categories-kb}))
+
+(defn next-category-id [bot chat-id]
+  (tg/send-message bot chat-id
+                   "Введите, пожалуйста, уникальный ID категории.\nИспользуйте только латинские буквы, без пробелов.\nЭтот ID служит для внутренних целей и не будет показываться в интерфейсе."
+                   {:reply_markup {:inline_keyboard [[{:text "Отмена" :callback_data "CMD_CANCEL"}]] :resize_keyboard true}}))
+
+(defn is-not-unique-category-id [bot chat-id]
+  (tg/send-message bot chat-id 
+                   "Категория с таким ID уже существует.\nПожалуйста, введите другой уникальный ID."
+                   {:reply_markup {:inline_keyboard [[{:text "Отмена" :callback_data "CMD_CANCEL"}]] :resize_keyboard true}}))
+
+(defn invalid-category-id [bot chat-id]
+  (tg/send-message bot chat-id 
+                   "Невалидный ID категории.\nВведите ID латинскими буквами, без пробелов."
+                   {:reply_markup {:inline_keyboard [[{:text "Отмена" :callback_data "CMD_CANCEL"}]] :resize_keyboard true}}))
+
+(defn next-category-title [bot chat-id]
+  (tg/send-message bot chat-id "ID сохранён. Отправьте название категории."
+                   {:reply_markup {:inline_keyboard [[{:text "Отмена" :callback_data "CMD_CANCEL"}]] :resize_keyboard true}}))
+
+(defn next-category-emoji [bot chat-id]
+  (tg/send-message bot chat-id 
+                   "Отлично! Теперь можете прислать стикер для категории.\nЕсли хотите пропустить этот шаг — отправьте /skip"
+                   {:reply_markup {:inline_keyboard [[{:text "Пропустить" :callback_data "CMD_SKIP"}]
+                                                     [{:text "Отмена" :callback_data "CMD_CANCEL"}]] 
+                                   :resize_keyboard true}}))
+
+(defn category-created [bot chat-id title emoji]
+  (tg/send-message bot chat-id 
+                   (str "Категория " emoji " " title " добавлена! Можете использовать её для новых расходов.")))
+
+(defn delete-category [bot chat-id categories]
+  (tg/send-message bot chat-id
+                   "Пожалуйста, выберите категорию, которую хотите удалить."
+                   {:reply_markup categories}))
+
+(defn is-delete-expences [bot chat-id title emoji]
+  (tg/send-message bot chat-id
+                   (str "Категория " emoji " " title " выбрана.\nХотите также удалить все расходы, связанные с этой категорией?")
+                   {:reply_markup {:inline_keyboard [[{:text "Удалить" :callback_data "CMD_YES"}]
+                                                     [{:text "Оставить" :callback_data "CMD_NO"}]
+                                                     [{:text "Отменить удаление категорий" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
+
+(defn is-sure [bot chat-id]
+  (tg/send-message bot chat-id
+                   "Вы уверены? После удаления вернуть категорию не получится."
+                   {:reply_markup {:inline_keyboard [[{:text "Уверен" :callback_data "CMD_YES"}]
+                                                     [{:text "Отменить удаление категорий" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
+
+(defn category-deleted [bot chat-id]
+  (tg/send-message bot chat-id "Категория успешно удалена."))

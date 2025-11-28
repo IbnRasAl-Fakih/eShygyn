@@ -6,10 +6,10 @@
   {:select [:*] 
    :from [:users]})
 
-(defn create-user [user-id chat_id first_name username categories]
+(defn create-user [user-id chat-id first-name username categories]
   {:insert-into [:users]
    :columns [:id :chat_id :first_name :username :categories]
-   :values [[user-id chat_id first_name username [:cast (json/generate-string categories) :jsonb]]]})
+   :values [[user-id chat-id first-name username [:cast (json/generate-string categories) :jsonb]]]})
 
 (defn get-expences-exact-day [date]
   {:select [*]
@@ -22,17 +22,21 @@
    :limit limit
    :offset offset})
 
-(defn create-expence [user_id category amount date]
+(defn create-expence [user-id category amount date]
   {:insert-into [:expences]
    :columns [:user_id :category :amount :date]
-   :values [{:user_id user_id, :category category, :amount amount, :date date}]})
+   :values [{:user_id user-id, :category category, :amount amount, :date date}]})
 
-(defn get-user [chat_id]
+(defn get-user [chat-id]
   {:select [:*]
    :from [:users]
-   :where [:= :chat_id chat_id]})
+   :where [:= :chat_id chat-id]})
 
-(defn update-user-categories [chat_id categories]
+(defn update-user-categories [chat-id categories]
   {:update [:users]
    :set {:categories [:cast (json/generate-string categories) :jsonb]}
-   :where [:= :chat_id chat_id]})
+   :where [:= :chat_id chat-id]})
+
+(defn delete-expenses [chat-id category-title]
+  {:delete-from [:expences]
+   :where [:= :category category-title]})

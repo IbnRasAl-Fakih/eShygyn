@@ -1,22 +1,20 @@
 (ns eshygyn.tg.new-expense
   (:require [clojure.string :as str]
             
-            [eshygyn.config.categories :as config-categories])
+            [eshygyn.tg.category :as tg-category])
   (:import (java.time ZoneId ZonedDateTime LocalDateTime)
            (java.time.format DateTimeFormatter DateTimeParseException)))
-
-(def user-session (atom {}))
 
 (def fmt-out (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm"))
 
 (def almaty-tz (ZoneId/of "Asia/Almaty"))
 
-(defn categories-kb [chat-id]
-  (let [cats (seq (config-categories/get-user-categories chat-id))]
+(defn categories-kb [chat-id prefix]
+  (let [cats (seq (tg-category/get-user-categories chat-id))]
     {:inline_keyboard
      (->> (or cats [])
           (map (fn [{:keys [id emoji title]}]
-                 [{:text (str emoji " " title) :callback_data (str "CAT_" (str/upper-case id))}]))
+                 [{:text (str emoji " " title) :callback_data (str prefix (str/upper-case id))}]))
           (map vec)
           vec)}))
 
@@ -50,25 +48,3 @@
                    (.toOffsetDateTime))
                (catch Exception _ nil))
             [fmt1 fmt2]))))
-
-(defn set-stage! [chat-id stage & kvs]
-  (swap! user-session
-         (fn [m]
-           (let [cur (get m chat-id {})
-                 draft-add (cond
-                             (and (= 1 (count kvs)) (map? (first kvs))) (first kvs)
-                             (even? (count kvs)) (apply hash-map kvs)
-                             :else (throw (ex-info "set-stage!: odd kvs" {:kvs kvs})))]
-             (assoc m chat-id
-                    (-> cur
-                        (assoc :stage stage)
-                        (update :draft #(merge (or % {}) draft-add))))))))
-
-(defn clear-session! [chat-id]
-  (swap! user-session dissoc chat-id))
-
-(defn get-session [chat-id]
-  (get @user-session chat-id))
-
-(defn find-category [chat-id cat-id]
-  (some #(when (= (str/upper-case (:id %)) cat-id) %) (config-categories/get-user-categories chat-id)))
