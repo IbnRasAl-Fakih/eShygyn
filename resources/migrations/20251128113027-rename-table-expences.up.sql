@@ -1,0 +1,1 @@
+alter table expences rename to expenses;

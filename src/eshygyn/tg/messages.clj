@@ -103,7 +103,7 @@
                    "Пожалуйста, выберите категорию, которую хотите удалить."
                    {:reply_markup categories}))
 
-(defn is-delete-expences [bot chat-id title emoji]
+(defn is-delete-expenses [bot chat-id title emoji]
   (tg/send-message bot chat-id
                    (str "Категория " emoji " " title " выбрана.\nХотите также удалить все расходы, связанные с этой категорией?")
                    {:reply_markup {:inline_keyboard [[{:text "Удалить" :callback_data "CMD_YES"}]

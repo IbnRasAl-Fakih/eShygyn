@@ -43,23 +43,23 @@
    "CMD_YES"
    (fn [bot chat-id _ _ draft stage]
      (case stage
-       :is-delete-expences
+       :is-delete-expenses
        (do
-         (user-session/set-stage! chat-id :is-sure :delete-expences true)
+         (user-session/set-stage! chat-id :is-sure :delete-expenses true)
          (messages/is-sure bot chat-id))
        
        :is-sure
-       (let [{:keys [category-id delete-expences]} draft]
+       (let [{:keys [category-id delete-expenses]} draft]
          (user-session/clear-session! chat-id)
-         (tg-category/delete-category chat-id category-id delete-expences)
+         (tg-category/delete-category chat-id category-id delete-expenses)
          (messages/category-deleted bot chat-id))))
    
    "CMD_NO"
    (fn [bot chat-id _ _ _ stage]
      (case stage
-       :is-delete-expences
+       :is-delete-expenses
        (do
-         (user-session/set-stage! chat-id :is-sure :delete-expences false)
+         (user-session/set-stage! chat-id :is-sure :delete-expenses false)
          (messages/is-sure bot chat-id))))
    })
 
@@ -95,8 +95,8 @@
         (if-not cat
           (println "\033[91mERROR\033[0m" "Неизвестная категория: ошибка со стороны сервера, так как пользователь только выбирает одну из выданных вариантов")
           (do
-            (user-session/set-stage! chat-id :is-delete-expences :category-id cat-id)
-            (messages/is-delete-expences bot chat-id (:title cat) (:emoji cat)))))
+            (user-session/set-stage! chat-id :is-delete-expenses :category-id cat-id)
+            (messages/is-delete-expenses bot chat-id (:title cat) (:emoji cat)))))
       (catch Exception e
         (println "\033[91mERROR\033[0m" "Ошибка в handle-callback-query, когда удаляется категория" e)))
 

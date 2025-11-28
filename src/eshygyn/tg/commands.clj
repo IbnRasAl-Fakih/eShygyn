@@ -46,5 +46,5 @@
     (messages/category-created bot chat-id category-title "")))
 
 (defn delete-category [bot chat-id]
-  (user-session/set-stage! chat-id :delete-category-choose {:category-id nil :delete-expences nil :sure nil})
+  (user-session/set-stage! chat-id :delete-category-choose {:category-id nil :delete-expenses nil :sure nil})
   (messages/delete-category bot chat-id (new-expense/categories-kb chat-id "DEL_CAT_")))

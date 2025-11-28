@@ -19,11 +19,11 @@
     (catch Exception e
       (println "\033[91mERROR\033[0m" "Ошибка во время создания пользователя" e))))
 
-(defn get-expences-exact-day [date]
-  (jdbc/execute! config/datasource (sql/format (sql-maps/get-expences-exact-day date))))
+(defn get-expenses-exact-day [date]
+  (jdbc/execute! config/datasource (sql/format (sql-maps/get-expenses-exact-day date))))
 
-(defn get-expences-with-offset [limit offset]
-  (jdbc/execute! config/datasource (sql/format (sql-maps/get-expences-with-offset limit offset))))
+(defn get-expenses-with-offset [limit offset]
+  (jdbc/execute! config/datasource (sql/format (sql-maps/get-expenses-with-offset limit offset))))
 
 (defn create-expence [user-id category amount date]
   (try

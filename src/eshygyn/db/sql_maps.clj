@@ -11,19 +11,19 @@
    :columns [:id :chat_id :first_name :username :categories]
    :values [[user-id chat-id first-name username [:cast (json/generate-string categories) :jsonb]]]})
 
-(defn get-expences-exact-day [date]
+(defn get-expenses-exact-day [date]
   {:select [*]
-   :from [:expences]
+   :from [:expenses]
    :where [:= :date date]})
 
-(defn get-expences-with-offset [limit offset]
+(defn get-expenses-with-offset [limit offset]
   {:select [:*]
-   :from [:expences]
+   :from [:expenses]
    :limit limit
    :offset offset})
 
 (defn create-expence [user-id category amount date]
-  {:insert-into [:expences]
+  {:insert-into [:expenses]
    :columns [:user_id :category :amount :date]
    :values [{:user_id user-id, :category category, :amount amount, :date date}]})
 
@@ -38,5 +38,5 @@
    :where [:= :chat_id chat-id]})
 
 (defn delete-expenses [chat-id category-title]
-  {:delete-from [:expences]
+  {:delete-from [:expenses]
    :where [:= :category category-title]})
