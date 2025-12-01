@@ -2,7 +2,6 @@
   "File for database connection functions"
   (:require [next.jdbc :as jdbc] 
             [honey.sql :as sql]
-            [cheshire.core :as json]
 
             [eshygyn.db.config :as config]
             [eshygyn.db.sql-maps :as sql-maps]))
@@ -42,6 +41,12 @@
 
 (defn delete-expenses [chat-id category-title]
   (try
-    (jdbc/execute! config/datasource (sql/format (sql-maps/delete-expenses (str chat-id) category-title)))
+    (jdbc/execute! config/datasource (sql/format (sql-maps/delete-expenses chat-id category-title)))
     (catch Exception e
       (println "\033[91mERROR\033[0m" "Ошибка во время удаления расходов (db/delete-expenses)" e))))
+
+(defn update-expence-category [chat-id title-new title-old]
+  (try
+    (jdbc/execute! config/datasource (sql/format (sql-maps/update-expence-category chat-id title-new title-old)))
+    (catch Exception e
+      (println "\033[91mERROR\033[0m" "Ошибка во время редактирование расхода (db/update-expence-category)" e))))

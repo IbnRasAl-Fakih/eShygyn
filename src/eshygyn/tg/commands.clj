@@ -46,7 +46,7 @@
     (messages/category-created bot chat-id category-title "")))
 
 (defn edit-category [bot chat-id]
-  (user-session/set-stage! chat-id :edit-category-choose {:category-id nil :category-title nil :category-emoji nil :save nil})
+  (user-session/set-stage! chat-id :edit-category-choose {:category-id nil :category-title nil :category-emoji nil :title-old nil})
   (messages/edit-category bot chat-id (new-expense/categories-kb chat-id "EDIT_CAT_")))
 
 (defn delete-category [bot chat-id]

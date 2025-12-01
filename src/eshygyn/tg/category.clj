@@ -37,12 +37,13 @@
     (catch Exception e
       (println "\033[91mERROR\033[0m" "Ошибка во время добавлений категорий" e))))
 
-(defn edit-category [chat-id category-id category-title category-emoji]
+(defn edit-category [chat-id category-id category-title category-emoji title-old]
   (try
     (let [old-categories (vec (json/parse-string (.getValue (:users/categories (db/get-user-by-chat-id chat-id))) true))
           cat-id (str/lower-case category-id)
           index (index-of-category cat-id old-categories)
           categories (assoc old-categories index {:id cat-id, :emoji category-emoji, :title category-title})]
+      (db/update-expence-category chat-id category-title title-old)
       (db/update-user-categories chat-id categories)
       (update-categories-cache! chat-id categories))
     (catch Exception e

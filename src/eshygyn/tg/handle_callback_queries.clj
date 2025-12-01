@@ -73,9 +73,9 @@
    
    "CMD_SAVE_CHANGES"
    (fn [bot chat-id _ _ draft _]
-     (let [{:keys [category-id category-title category-emoji]} draft]
+     (let [{:keys [category-id category-title category-emoji title-old]} draft]
        (user-session/clear-session! chat-id)
-       (tg-category/edit-category chat-id category-id category-title category-emoji)
+       (tg-category/edit-category chat-id category-id category-title category-emoji title-old)
        (messages/category-edited bot chat-id)))
    })
 
@@ -113,7 +113,7 @@
         (if-not cat
           (println "\033[91mERROR\033[0m" "Неизвестная категория: ошибка со стороны сервера, так как пользователь только выбирает одну из выданных вариантов")
           (do
-            (user-session/set-stage! chat-id :choose-category-part :category-id cat-id :category-title title :category-emoji emoji :save false)
+            (user-session/set-stage! chat-id :choose-category-part :category-id cat-id :category-title title :category-emoji emoji :title-old title)
             (messages/choose-category-part-to-edit bot chat-id title emoji))))
       (catch Exception e
         (println "\033[91mERROR\033[0m" "Ошибка в handle-callback-query, когда редактируется категория" e)))

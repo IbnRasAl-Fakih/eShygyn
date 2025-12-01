@@ -39,4 +39,13 @@
 
 (defn delete-expenses [chat-id category-title]
   {:delete-from [:expenses]
-   :where [:= :category category-title]})
+   :where [:and
+           [:= :user_id chat-id]
+           [:= :category category-title]]})
+
+(defn update-expence-category [user-id title-new title-old]
+  {:update [:expenses]
+   :set {:category title-new}
+   :where [:and
+           [:= :user_id user-id]
+           [:= :category title-old]]})
