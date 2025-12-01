@@ -76,7 +76,24 @@
      (let [{:keys [category-id category-title category-emoji title-old]} draft]
        (user-session/clear-session! chat-id)
        (tg-category/edit-category chat-id category-id category-title category-emoji title-old)
-       (messages/category-edited bot chat-id)))
+       (messages/category-edited bot chat-id))) 
+
+   "CMD_CATEGORY_MANAGEMENT"
+   (fn [bot chat-id & _]
+     (user-session/set-stage! chat-id :category-settings-options)
+     (messages/category-settings-list bot chat-id))
+   
+   "CMD_ADD_CATEGORY"
+   (fn [bot chat-id & _]
+     (commands/add-category bot chat-id))
+   
+   "CMD_EDIT_CATEGORY"
+   (fn [bot chat-id & _]
+     (commands/edit-category bot chat-id))
+   
+   "CMD_DELETE_CATEGORY"
+   (fn [bot chat-id & _]
+     (commands/delete-category bot chat-id))
    })
 
 (defn query-not-listed-handler [data bot chat-id user-id draft]

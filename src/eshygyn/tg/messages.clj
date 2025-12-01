@@ -39,7 +39,7 @@
                    {:reply_markup (new-expense/time-kb)}))
 
 (defn unknown-message-with-stage [bot chat-id]
-  (tg/send-message bot chat-id "🤔 Я вас не понял. Нажмите /cancel и начните заново с /add"))
+  (tg/send-message bot chat-id "🤔 Я вас не понял. Попробуйте снова"))
 
 ;; TODO: нужно изменить текст когда все будет готово 
 (defn start [bot chat-id]
@@ -152,3 +152,19 @@
 
 (defn category-deleted [bot chat-id]
   (tg/send-message bot chat-id "Категория успешно удалена."))
+
+(defn settings-list [bot chat-id]
+  (tg/send-message bot chat-id
+                   "Пожалуйста, выберите раздел настроек"
+                   {:reply_markup {:inline_keyboard [[{:text "Управление категориями" :callback_data "CMD_CATEGORY_MANAGEMENT"}]
+                                                     [{:text "Закрыть" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
+
+(defn category-settings-list [bot chat-id]
+  (tg/send-message bot chat-id
+                   "Хорошо! Что хотите сделать с категориями? Выберите вариант ниже"
+                   {:reply_markup {:inline_keyboard [[{:text "Создать категорию" :callback_data "CMD_ADD_CATEGORY"}]
+                                                     [{:text "Изменить категорию" :callback_data "CMD_EDIT_CATEGORY"}]
+                                                     [{:text "Удалить категорию" :callback_data "CMD_DELETE_CATEGORY"}]
+                                                     [{:text "Закрыть" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
