@@ -25,6 +25,9 @@
 (defn find-category [chat-id cat-id]
   (some #(when (= (str/upper-case (:id %)) cat-id) %) (get-user-categories chat-id)))
 
+(defn index-of-category [id categories]
+  (first (keep-indexed #(when (= (:id %2) id) %1) categories)))
+
 (defn add-category [chat-id new-category]
   (try
     (let [old-categories (json/parse-string (.getValue (:users/categories (db/get-user-by-chat-id chat-id))) true)
@@ -33,6 +36,17 @@
       (update-categories-cache! chat-id categories))
     (catch Exception e
       (println "\033[91mERROR\033[0m" "Ошибка во время добавлений категорий" e))))
+
+(defn edit-category [chat-id category-id category-title category-emoji]
+  (try
+    (let [old-categories (vec (json/parse-string (.getValue (:users/categories (db/get-user-by-chat-id chat-id))) true))
+          cat-id (str/lower-case category-id)
+          index (index-of-category cat-id old-categories)
+          categories (assoc old-categories index {:id cat-id, :emoji category-emoji, :title category-title})]
+      (db/update-user-categories chat-id categories)
+      (update-categories-cache! chat-id categories))
+    (catch Exception e
+      (println "\033[91mERROR\033[0m" "Ошибка во время редактирование категорий" e))))
 
 (defn delete-category [chat-id category-id is-delete-expenses]
   (try

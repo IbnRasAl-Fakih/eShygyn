@@ -14,7 +14,8 @@
    "/change"          commands/change-category
    "/add-category"    commands/add-category
    "/skip"            commands/skip
-   "/delete-category" commands/delete-category})
+   "/delete-category" commands/delete-category
+   "/edit-category"   commands/edit-category})
 
 (defn text-not-listed-handler [bot chat-id stage user-id text draft]
   (cond
@@ -58,6 +59,16 @@
       (tg-category/add-category chat-id {:id category-id, :emoji text, :title category-title})
       (user-session/clear-session! chat-id)
       (messages/category-created bot chat-id category-title text))
+    
+    (= stage :edit-category-title)
+    (do
+      (user-session/set-stage! chat-id :edit-category-choose :category-title text)
+      (messages/edit-category-loop bot chat-id))
+    
+    (= stage :edit-category-emoji)
+    (do
+      (user-session/set-stage! chat-id :edit-category-choose :category-emoji text)
+      (messages/edit-category-loop bot chat-id))
 
     :else (messages/unknown-message-with-stage bot chat-id)))
 

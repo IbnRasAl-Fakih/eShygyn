@@ -3,7 +3,6 @@
             [clojure.string :as str]
             
             [eshygyn.db.db :as db]
-            [eshygyn.tg.new-expense :as new-expense]
             [eshygyn.tg.user-session :as user-session]
             [eshygyn.tg.commands :as commands]
             [eshygyn.tg.messages :as messages]
@@ -61,6 +60,23 @@
        (do
          (user-session/set-stage! chat-id :is-sure :delete-expenses false)
          (messages/is-sure bot chat-id))))
+   
+   "CMD_EDIT_TITLE"
+   (fn [bot chat-id & _]
+     (user-session/set-stage! chat-id :edit-category-title)
+     (messages/edit-category-title bot chat-id))
+   
+   "CMD_EDIT_EMOJI"
+   (fn [bot chat-id & _]
+     (user-session/set-stage! chat-id :edit-category-emoji)
+     (messages/edit-category-emoji bot chat-id))
+   
+   "CMD_SAVE_CHANGES"
+   (fn [bot chat-id _ _ draft _]
+     (let [{:keys [category-id category-title category-emoji]} draft]
+       (user-session/clear-session! chat-id)
+       (tg-category/edit-category chat-id category-id category-title category-emoji)
+       (messages/category-edited bot chat-id)))
    })
 
 (defn query-not-listed-handler [data bot chat-id user-id draft]
@@ -87,6 +103,20 @@
       (db/create-expence user-id category amount final-time)
       (user-session/clear-session! chat-id)
       (messages/expense-created bot chat-id category amount final-time))
+    
+    (str/starts-with? data "EDIT_CAT_")
+    (try
+      (let [cat-id (subs data 9)
+            cat (tg-category/find-category chat-id cat-id)
+            title (:title cat)
+            emoji (:emoji cat)]
+        (if-not cat
+          (println "\033[91mERROR\033[0m" "Неизвестная категория: ошибка со стороны сервера, так как пользователь только выбирает одну из выданных вариантов")
+          (do
+            (user-session/set-stage! chat-id :choose-category-part :category-id cat-id :category-title title :category-emoji emoji :save false)
+            (messages/choose-category-part-to-edit bot chat-id title emoji))))
+      (catch Exception e
+        (println "\033[91mERROR\033[0m" "Ошибка в handle-callback-query, когда редактируется категория" e)))
     
     (str/starts-with? data "DEL_CAT_")
     (try
