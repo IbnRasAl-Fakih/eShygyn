@@ -34,11 +34,14 @@
     (let [dt (new-expense/parse-datetime text)]
       (if (nil? dt)
         (messages/wrong-time bot chat-id)
-        (let [{:keys [category amount]} draft]
-          (db/create-expence user-id category amount dt)
-          (user-session/clear-session! chat-id)
-          (messages/expense-created bot chat-id category amount dt))))
-    
+        (do
+          (user-session/set-stage! chat-id :enter-comment :when dt)
+          (messages/next-comment bot chat-id))))
+
+    (= stage :enter-comment)
+    (let [{:keys [category amount when]} draft]
+      (commands/skip-comment bot chat-id user-id category amount when text))
+
     (= stage :enter-category-id)
     (let [parsed-id (tg-category/parse-text text)
           is-unique (tg-category/is-unique parsed-id chat-id)]
@@ -46,26 +49,26 @@
         (if (not= 0 (count parsed-id))
           (do
             (user-session/set-stage! chat-id :enter-category-title :category-id parsed-id)
-            (messages/next-category-title bot chat-id)) 
+            (messages/next-category-title bot chat-id))
           (messages/invalid-category-id bot chat-id))
         (messages/is-not-unique-category-id bot chat-id)))
-    
+
     (= stage :enter-category-title)
     (do
       (user-session/set-stage! chat-id :enter-category-emoji :category-title text)
       (messages/next-category-emoji bot chat-id))
-    
+
     (= stage :enter-category-emoji)
     (let [{:keys [category-id category-title]} draft]
       (tg-category/add-category chat-id {:id category-id, :emoji text, :title category-title})
       (user-session/clear-session! chat-id)
       (messages/category-created bot chat-id category-title text))
-    
+
     (= stage :edit-category-title)
     (do
       (user-session/set-stage! chat-id :edit-category-choose :category-title text)
       (messages/edit-category-loop bot chat-id))
-    
+
     (= stage :edit-category-emoji)
     (do
       (user-session/set-stage! chat-id :edit-category-choose :category-emoji text)

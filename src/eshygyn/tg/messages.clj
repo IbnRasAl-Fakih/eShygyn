@@ -16,9 +16,13 @@
                    (str "Введите сумму для категории «" category "»\n\nЕсли хотите выбрать другую категорию — нажмите кнопку «Изменить категорию» или введите команду /change")
                    {:reply_markup {:inline_keyboard [[{:text "Изменить категорию" :callback_data "CMD_CHANGE_CATEGORY"}]] :resize_keyboard true}}))
 
-(defn expense-created [bot chat-id category amount date]
+(defn expense-created [bot chat-id category amount date comment]
   (tg/send-message bot chat-id
-                   (format "✅ Расход добавлен:\n\n• Категория: %s\n• Сумма: %s\n• Время: %s" category amount (.format date new-expense/fmt-out))))
+                   (format "✅ Расход добавлен:\n\n• Категория: %s\n• Сумма: %s\n• Время: %s\n• Комментарий: %s" 
+                           category amount (.format date new-expense/fmt-out) 
+                           (if (> (count comment) 0)
+                             comment
+                             "нет"))))
 
 (defn unknown-command [bot chat-id command]
   (tg/send-message bot chat-id (str "❓ Неизвестная команда: " command "\n\nПопробуй /help, чтобы увидеть, что я умею")))
@@ -67,6 +71,20 @@
   (tg/send-message bot chat-id
                    "Изменение категории\nВыберите новую категорию из списка ниже 👇"
                    {:reply_markup categories-kb}))
+
+(defn next-comment [bot chat-id]
+  (tg/send-message bot chat-id
+                   "📌 Напишите небольшой комментарий, чтобы позже легко понять, на что был этот расход"
+                   {:reply_markup {:inline_keyboard [[{:text "Пропустить" :callback_data "CMD_SKIP_COMMENT"}]
+                                                     [{:text "❌ Отмена" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
+
+(defn comment-error [bot chat-id]
+  (tg/send-message bot chat-id
+                   "Ой! Комментарий вышел за пределы 300 символов.\nСделайте его немного короче 🙂"
+                   {:reply_markup {:inline_keyboard [[{:text "Пропустить" :callback_data "CMD_SKIP_COMMENT"}]
+                                                     [{:text "❌ Отмена" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
 
 (defn next-category-id [bot chat-id]
   (tg/send-message bot chat-id

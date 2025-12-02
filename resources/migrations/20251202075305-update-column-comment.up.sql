@@ -1,0 +1,1 @@
+alter table expenses alter column comment type varchar(300);

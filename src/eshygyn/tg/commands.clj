@@ -27,12 +27,20 @@
   (messages/cancel bot chat-id))
 
 (defn add-expense [bot chat-id]
-  (user-session/set-stage! chat-id :choose-category {:category nil :amount nil :when nil})
+  (user-session/set-stage! chat-id :choose-category {:category nil :amount nil :when nil :comment nil})
   (messages/next-category bot chat-id (new-expense/categories-kb chat-id "CAT_")))
 
 (defn change-category [bot chat-id]
   (user-session/set-stage! chat-id :choose-category {:category nil :amount nil :when nil})
   (messages/change-category bot chat-id (new-expense/categories-kb chat-id "CAT_")))
+
+(defn skip-comment [bot chat-id user-id category amount when text]
+  (if (> (count text) 300)
+    (messages/comment-error bot chat-id)
+    (do
+      (db/create-expence user-id category amount when text)
+      (user-session/clear-session! chat-id)
+      (messages/expense-created bot chat-id category amount when text))))
 
 (defn add-category [bot chat-id]
   (user-session/set-stage! chat-id :enter-category-id {:category-id nil :category-title nil :category-emoji nil})

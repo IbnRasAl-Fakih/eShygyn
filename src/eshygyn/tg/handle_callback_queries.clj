@@ -22,14 +22,12 @@
      (commands/cancel bot chat-id))
    
    "CMD_TIME_NOW"
-   (fn [bot chat-id user-id _ draft & _]
+   (fn [bot chat-id & _]
      (let [now-odt (-> (ZonedDateTime/now almaty-tz)
                        (.withNano 0)
-                       (.toOffsetDateTime))
-           {:keys [category amount]} draft]
-       (db/create-expence user-id category amount now-odt)
-       (user-session/clear-session! chat-id)
-       (messages/expense-created bot chat-id category amount now-odt)))
+                       (.toOffsetDateTime))]
+       (user-session/set-stage! chat-id :enter-comment :when now-odt)
+       (messages/next-comment bot chat-id)))
    
    "CMD_CHANGE_CATEGORY"
    (fn [bot chat-id & _]
@@ -38,6 +36,11 @@
    "CMD_SKIP"
    (fn [bot chat-id & _]
      (commands/skip bot chat-id))
+   
+   "CMD_SKIP_COMMENT"
+   (fn [bot chat-id user-id _ draft _]
+     (let [{:keys [category amount when]} draft]
+       (commands/skip-comment bot chat-id user-id category amount when "")))
    
    "CMD_YES"
    (fn [bot chat-id _ _ draft stage]
@@ -96,7 +99,7 @@
      (commands/delete-category bot chat-id))
    })
 
-(defn query-not-listed-handler [data bot chat-id user-id draft]
+(defn query-not-listed-handler [data bot chat-id]
   (cond
     (str/starts-with? data "CAT_")
     (try
@@ -115,11 +118,9 @@
           now-odt (-> (ZonedDateTime/now almaty-tz)
                       (.withNano 0)
                       (.toOffsetDateTime))
-          final-time (.minusMinutes now-odt minus-time)
-          {:keys [category amount]} draft]
-      (db/create-expence user-id category amount final-time)
-      (user-session/clear-session! chat-id)
-      (messages/expense-created bot chat-id category amount final-time))
+          final-time (.minusMinutes now-odt minus-time)]
+      (user-session/set-stage! chat-id :enter-comment :when final-time)
+      (messages/next-comment bot chat-id))
     
     (str/starts-with? data "EDIT_CAT_")
     (try
@@ -162,7 +163,7 @@
       (tg/answer-callback-query bot callback-id)
       
       (if (nil? function)
-        (query-not-listed-handler data bot chat-id user-id draft)
+        (query-not-listed-handler data bot chat-id)
         (apply function [bot chat-id user-id callback-query draft stage])))
         (catch Exception e
           (println "\033[91mERROR\033[0m" "Ошибка в handle-callback-query:" e))))

@@ -24,9 +24,9 @@
 (defn get-expenses-with-offset [limit offset]
   (jdbc/execute! config/datasource (sql/format (sql-maps/get-expenses-with-offset limit offset))))
 
-(defn create-expence [user-id category amount date]
+(defn create-expence [user-id category amount date comment]
   (try
-    (jdbc/execute! config/datasource (sql/format (sql-maps/create-expence user-id category amount date)))
+    (jdbc/execute! config/datasource (sql/format (sql-maps/create-expence user-id category amount date (str comment))))
     (catch Exception e
       (println "\033[91mERROR\033[0m" "Ошибка во время создания расхода (db/create-expence)" e))))
 

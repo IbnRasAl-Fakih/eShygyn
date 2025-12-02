@@ -22,10 +22,10 @@
    :limit limit
    :offset offset})
 
-(defn create-expence [user-id category amount date]
+(defn create-expence [user-id category amount date comment]
   {:insert-into [:expenses]
-   :columns [:user_id :category :amount :date]
-   :values [{:user_id user-id, :category category, :amount amount, :date date}]})
+   :columns [:user_id :category :amount :date :comment]
+   :values [{:user_id user-id, :category category, :amount amount, :date date, :comment comment}]})
 
 (defn get-user [chat-id]
   {:select [:*]
