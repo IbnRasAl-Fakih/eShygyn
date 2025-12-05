@@ -18,8 +18,8 @@
 
 (defn expense-created [bot chat-id category amount date comment]
   (tg/send-message bot chat-id
-                   (format "✅ Расход добавлен:\n\n• Категория: %s\n• Сумма: %s\n• Время: %s\n• Комментарий: %s" 
-                           category amount (.format date new-expense/fmt-out) 
+                   (format "✅ Расход добавлен:\n\n• Категория: %s\n• Сумма: %s тг\n• Время: %s\n• Комментарий: %s" 
+                           category (new-expense/divide-numbers (new-expense/pretty-amount amount)) (.format date new-expense/fmt-out) 
                            (if (> (count comment) 0)
                              comment
                              "нет"))))
@@ -184,5 +184,21 @@
                    {:reply_markup {:inline_keyboard [[{:text "Создать категорию" :callback_data "CMD_ADD_CATEGORY"}]
                                                      [{:text "Изменить категорию" :callback_data "CMD_EDIT_CATEGORY"}]
                                                      [{:text "Удалить категорию" :callback_data "CMD_DELETE_CATEGORY"}]
+                                                     [{:text "Закрыть" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
+
+(defn expenses-list-start [bot chat-id list total]
+  (tg/send-message bot chat-id
+                   (str "Список расходов (общее количество - " total "):\n\n" list)
+                   {:reply_markup {:inline_keyboard [[{:text "←" :callback_data "CMD_LEFT"}
+                                                      {:text "→" :callback_data "CMD_RIGHT"}]
+                                                     [{:text "Закрыть" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
+
+(defn expenses-list [bot chat-id list total message-id]
+  (tg/edit-message-text bot chat-id message-id
+                   (str "Список расходов (общее количество - " total "):\n\n" list)
+                   {:reply_markup {:inline_keyboard [[{:text "←" :callback_data "CMD_LEFT"}
+                                                      {:text "→" :callback_data "CMD_RIGHT"}]
                                                      [{:text "Закрыть" :callback_data "CMD_CANCEL"}]]
                                    :resize_keyboard true}}))

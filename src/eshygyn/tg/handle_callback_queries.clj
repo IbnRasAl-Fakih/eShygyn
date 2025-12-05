@@ -6,7 +6,8 @@
             [eshygyn.tg.user-session :as user-session]
             [eshygyn.tg.commands :as commands]
             [eshygyn.tg.messages :as messages]
-            [eshygyn.tg.category :as tg-category])
+            [eshygyn.tg.category :as tg-category]
+            [eshygyn.tg.new-expense :as new-expense])
   (:import (java.time ZoneId ZonedDateTime LocalDateTime)
            (java.time.format DateTimeFormatter DateTimeParseException)))
 
@@ -97,6 +98,22 @@
    "CMD_DELETE_CATEGORY"
    (fn [bot chat-id & _]
      (commands/delete-category bot chat-id))
+   
+   "CMD_RIGHT"
+   (fn [bot chat-id _ callback-query draft _]
+     (let [{:keys [offset total]} draft
+           message-id (:message_id (:message callback-query))]
+       (println "callback-query" callback-query) ;; delete
+       (if (> total (+ offset 10)) 
+         (commands/expenses-list bot chat-id (+ offset 10) message-id)
+         (commands/expenses-list bot chat-id offset message-id))))
+   
+   "CMD_LEFT"
+   (fn [bot chat-id _ callback-query draft _]
+     (let [offset (:offset draft)
+           message-id (:message_id (:message callback-query))]
+       (commands/expenses-list bot chat-id (new-expense/correct-offset (- offset 10)) message-id)))
+   
    })
 
 (defn query-not-listed-handler [data bot chat-id]

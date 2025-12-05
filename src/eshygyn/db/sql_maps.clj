@@ -2,10 +2,6 @@
   "File for sql-maps"
   (:require [cheshire.core :as json]))
 
-(defn get-all-users []
-  {:select [:*] 
-   :from [:users]})
-
 (defn create-user [user-id chat-id first-name username categories]
   {:insert-into [:users]
    :columns [:id :chat_id :first_name :username :categories]
@@ -16,11 +12,17 @@
    :from [:expenses]
    :where [:= :date date]})
 
-(defn get-expenses-with-offset [limit offset]
+(defn get-expenses-with-offset [chat-id limit offset]
   {:select [:*]
    :from [:expenses]
+   :where [:= :user_id chat-id]
    :limit limit
    :offset offset})
+
+(defn get-number-of-expenses [chat-id]
+  {:select :%count.*
+   :from [:expenses]
+   :where [:= :user_id chat-id]})
 
 (defn create-expence [user-id category amount date comment]
   {:insert-into [:expenses]

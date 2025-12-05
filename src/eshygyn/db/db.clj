@@ -6,9 +6,6 @@
             [eshygyn.db.config :as config]
             [eshygyn.db.sql-maps :as sql-maps]))
 
-(defn get-all-users []
-  (jdbc/execute! config/datasource (sql/format (sql-maps/get-all-users))))
-
 (defn get-user-by-chat-id [chat-id]
   (jdbc/execute-one! config/datasource (sql/format (sql-maps/get-user (str chat-id)))))
 
@@ -21,8 +18,11 @@
 (defn get-expenses-exact-day [date]
   (jdbc/execute! config/datasource (sql/format (sql-maps/get-expenses-exact-day date))))
 
-(defn get-expenses-with-offset [limit offset]
-  (jdbc/execute! config/datasource (sql/format (sql-maps/get-expenses-with-offset limit offset))))
+(defn get-expenses-with-offset [chat-id offset]
+  (jdbc/execute! config/datasource (sql/format (sql-maps/get-expenses-with-offset chat-id config/expenses-limit offset))))
+
+(defn get-number-of-expenses [chat-id]
+  (first (jdbc/execute! config/datasource (sql/format (sql-maps/get-number-of-expenses chat-id)))))
 
 (defn create-expence [user-id category amount date comment]
   (try

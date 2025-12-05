@@ -16,7 +16,8 @@
    "/skip"            commands/skip
    "/delete-category" commands/delete-category
    "/edit-category"   commands/edit-category
-   "/settings"        messages/settings-list})
+   "/settings"        messages/settings-list
+   "/expenses"        commands/expenses-list})
 
 (defn text-not-listed-handler [bot chat-id stage user-id text draft]
   (cond

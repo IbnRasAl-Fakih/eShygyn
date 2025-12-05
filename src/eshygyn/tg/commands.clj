@@ -4,7 +4,9 @@
             [eshygyn.db.db :as db]
             [eshygyn.tg.messages :as messages]
             [eshygyn.config.categories :as categories]
-            [eshygyn.tg.category :as tg-category]))
+            [eshygyn.tg.category :as tg-category]
+            
+            [clojure.string :as str]))
 
 (defn start [bot chat-id]
   (messages/start bot chat-id))
@@ -60,3 +62,13 @@
 (defn delete-category [bot chat-id]
   (user-session/set-stage! chat-id :delete-category-choose {:category-id nil :delete-expenses nil :sure nil})
   (messages/delete-category bot chat-id (new-expense/categories-kb chat-id "DEL_CAT_")))
+
+(defn expenses-list
+  ([bot chat-id]
+   (let [total (new-expense/get-total-of-expenses chat-id)]
+     (user-session/set-stage! chat-id :expenses-list {:offset 0 :total total})
+     (messages/expenses-list-start bot chat-id (new-expense/expenses-list chat-id 0) total)))
+  ([bot chat-id offset message-id]
+   (let [total (new-expense/get-total-of-expenses chat-id)]
+     (user-session/set-stage! chat-id :expenses-list {:offset offset :total total})
+     (messages/expenses-list bot chat-id (new-expense/expenses-list chat-id offset) total message-id))))
