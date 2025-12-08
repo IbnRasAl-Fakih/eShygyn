@@ -38,9 +38,9 @@
 
 (defn skip-comment [bot chat-id user-id category amount when text]
   (if (> (count text) 300)
-    (messages/comment-error bot chat-id)
+    (messages/comment-error bot chat-id "CMD_SKIP_COMMENT")
     (do
-      (db/create-expence user-id category amount when text)
+      (db/create-expense user-id category amount when text)
       (user-session/clear-session! chat-id)
       (messages/expense-created bot chat-id category amount when text))))
 
@@ -72,3 +72,16 @@
    (let [total (new-expense/get-total-of-expenses chat-id)]
      (user-session/set-stage! chat-id :expenses-list {:offset offset :total total})
      (messages/expenses-list bot chat-id (new-expense/expenses-list chat-id offset) total message-id))))
+
+(defn edit-expenses-list
+  ([bot chat-id]
+   (let [total (new-expense/get-total-of-expenses chat-id)]
+     (user-session/set-stage! chat-id :expenses-list {:offset 0 :total total})
+     (messages/edit-expenses-list-start bot chat-id (new-expense/edit-expenses-list-with-arrows chat-id 0 "EXP_") total)))
+  ([bot chat-id offset message-id]
+   (let [total (new-expense/get-total-of-expenses chat-id)]
+     (user-session/set-stage! chat-id :expenses-list {:offset offset :total total})
+     (messages/edit-expenses-list bot chat-id (new-expense/edit-expenses-list-with-arrows chat-id offset "EXP_") total message-id))))
+
+(defn update-expense [id category amount when comment]
+  (db/update-expense id category amount (new-expense/parse-datetime when) comment))

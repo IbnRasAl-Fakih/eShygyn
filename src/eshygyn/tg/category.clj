@@ -43,7 +43,7 @@
           cat-id (str/lower-case category-id)
           index (index-of-category cat-id old-categories)
           categories (assoc old-categories index {:id cat-id, :emoji category-emoji, :title category-title})]
-      (db/update-expence-category chat-id category-title title-old)
+      (db/update-expense-category chat-id category-title title-old)
       (db/update-user-categories chat-id categories)
       (update-categories-cache! chat-id categories))
     (catch Exception e

@@ -3,26 +3,14 @@
 
             [eshygyn.tg.new-expense :as new-expense]))
 
-(defn authorize [bot chat-id]
-  (tg/send-message bot chat-id
-                   "🚫 Вы не авторизованы!\nПожалуйста, сначала выполните авторизацию, чтобы использовать бота.\n\nВведите команду /authorize или нажмите кнопку «Авторизоваться»"
-                   {:reply_markup {:inline_keyboard [[{:text "Авторизоваться" :callback_data "CMD_AUTHORIZE"}]] :resize_keyboard true}}))
+;; GLOBAL MESSAGES
+
+;; TODO: нужно изменить текст когда все будет готово 
+(defn start [bot chat-id]
+  (tg/send-message bot chat-id "Привет! 👋 Я твой Expense Tracker бот. Отправь мне любое сообщение."))
 
 (defn cancel [bot chat-id]
   (tg/send-message bot chat-id "❌ Действие отменено. Если понадобится — можете начать заново."))
-
-(defn next-amount [bot chat-id category]
-  (tg/send-message bot chat-id
-                   (str "Введите сумму для категории «" category "»\n\nЕсли хотите выбрать другую категорию — нажмите кнопку «Изменить категорию» или введите команду /change")
-                   {:reply_markup {:inline_keyboard [[{:text "Изменить категорию" :callback_data "CMD_CHANGE_CATEGORY"}]] :resize_keyboard true}}))
-
-(defn expense-created [bot chat-id category amount date comment]
-  (tg/send-message bot chat-id
-                   (format "✅ Расход добавлен:\n\n• Категория: %s\n• Сумма: %s тг\n• Время: %s\n• Комментарий: %s" 
-                           category (new-expense/divide-numbers (new-expense/pretty-amount amount)) (.format date new-expense/fmt-out) 
-                           (if (> (count comment) 0)
-                             comment
-                             "нет"))))
 
 (defn unknown-command [bot chat-id command]
   (tg/send-message bot chat-id (str "❓ Неизвестная команда: " command "\n\nПопробуй /help, чтобы увидеть, что я умею")))
@@ -30,24 +18,15 @@
 (defn unknown-message [bot chat-id]
   (tg/send-message bot chat-id "ℹ️ Чтобы добавить расход, используйте команду /add"))
 
-(defn wrong-amount [bot chat-id]
-  (tg/send-message bot chat-id "⚠️ Некорректная сумма. Пример: 1200 или 1 499,50"))
-
-(defn next-time [bot chat-id]
-  (tg/send-message bot chat-id
-                   "🕒 Теперь укажите время:\n\n• Нажмите кнопку «Текущее время» нижe\n• Или введите вручную в формате dd.mm.yy hh:mm — например, 14.06.04 03:32"
-                   {:reply_markup (new-expense/time-kb)}))
-
-(defn wrong-time [bot chat-id]
-  (tg/send-message bot chat-id "⚠️ Неверный формат времени. Используйте формат dd.mm.yy hh:mm — например, 14.06.04 03:32"
-                   {:reply_markup (new-expense/time-kb)}))
-
 (defn unknown-message-with-stage [bot chat-id]
   (tg/send-message bot chat-id "🤔 Я вас не понял. Попробуйте снова"))
 
-;; TODO: нужно изменить текст когда все будет готово 
-(defn start [bot chat-id]
-  (tg/send-message bot chat-id "Привет! 👋 Я твой Expense Tracker бот. Отправь мне любое сообщение."))
+;; AUTHORIZATION FUNCTIONS
+
+(defn authorize [bot chat-id]
+  (tg/send-message bot chat-id
+                   "🚫 Вы не авторизованы!\nПожалуйста, сначала выполните авторизацию, чтобы использовать бота.\n\nВведите команду /authorize или нажмите кнопку «Авторизоваться»"
+                   {:reply_markup {:inline_keyboard [[{:text "Авторизоваться" :callback_data "CMD_AUTHORIZE"}]] :resize_keyboard true}}))
 
 (defn already-authorized [bot chat-id]
   (tg/send-message bot chat-id
@@ -62,6 +41,8 @@
   (tg/send-message bot chat-id
                    "⚠️ Не удалось авторизоваться.\n\n• Попробуйте перезапустить бота.\n• Или введите команду /start для повторной попытки."))
 
+;; ADD EXPENSE FUNCTIONS
+
 (defn next-category [bot chat-id categories-kb]
   (tg/send-message bot chat-id
                    "Добавление нового расхода\nВыберите категорию из списка ниже 👇"
@@ -72,19 +53,46 @@
                    "Изменение категории\nВыберите новую категорию из списка ниже 👇"
                    {:reply_markup categories-kb}))
 
-(defn next-comment [bot chat-id]
+(defn next-amount [bot chat-id category]
+  (tg/send-message bot chat-id
+                   (str "Введите сумму для категории «" category "»\n\nЕсли хотите выбрать другую категорию — нажмите кнопку «Изменить категорию» или введите команду /change")
+                   {:reply_markup {:inline_keyboard [[{:text "Изменить категорию" :callback_data "CMD_CHANGE_CATEGORY"}]] :resize_keyboard true}}))
+
+(defn wrong-amount [bot chat-id]
+  (tg/send-message bot chat-id "⚠️ Некорректная сумма. Пример: 1200 или 1 499,50"))
+
+(defn next-time [bot chat-id prefix]
+  (tg/send-message bot chat-id
+                   "🕒 Теперь укажите время:\n\n• Нажмите кнопку «Текущее время» нижe\n• Или введите вручную в формате dd.mm.yy hh:mm — например, 14.06.04 03:32"
+                   {:reply_markup (new-expense/time-kb prefix)}))
+
+(defn wrong-time [bot chat-id prefix]
+  (tg/send-message bot chat-id "⚠️ Неверный формат времени. Используйте формат dd.mm.yy hh:mm — например, 14.06.04 03:32"
+                   {:reply_markup (new-expense/time-kb prefix)}))
+
+(defn next-comment [bot chat-id callback_data]
   (tg/send-message bot chat-id
                    "📌 Напишите небольшой комментарий, чтобы позже легко понять, на что был этот расход"
-                   {:reply_markup {:inline_keyboard [[{:text "Пропустить" :callback_data "CMD_SKIP_COMMENT"}]
+                   {:reply_markup {:inline_keyboard [[{:text "Пропустить" :callback_data callback_data}]
                                                      [{:text "❌ Отмена" :callback_data "CMD_CANCEL"}]]
                                    :resize_keyboard true}}))
 
-(defn comment-error [bot chat-id]
+(defn comment-error [bot chat-id callback_data]
   (tg/send-message bot chat-id
                    "Ой! Комментарий вышел за пределы 300 символов.\nСделайте его немного короче 🙂"
-                   {:reply_markup {:inline_keyboard [[{:text "Пропустить" :callback_data "CMD_SKIP_COMMENT"}]
+                   {:reply_markup {:inline_keyboard [[{:text "Пропустить" :callback_data callback_data}]
                                                      [{:text "❌ Отмена" :callback_data "CMD_CANCEL"}]]
                                    :resize_keyboard true}}))
+
+(defn expense-created [bot chat-id category amount date comment]
+  (tg/send-message bot chat-id
+                   (format "✅ Расход добавлен:\n\n• Категория: %s\n• Сумма: %s тг\n• Время: %s\n• Комментарий: %s"
+                           category (new-expense/divide-numbers (new-expense/pretty-amount amount)) (.format date new-expense/fmt-out)
+                           (if (> (count comment) 0)
+                             comment
+                             "нет"))))
+
+;; SETTINGS: CATEGORY FUNCTIONS
 
 (defn next-category-id [bot chat-id]
   (tg/send-message bot chat-id
@@ -187,6 +195,8 @@
                                                      [{:text "Закрыть" :callback_data "CMD_CANCEL"}]]
                                    :resize_keyboard true}}))
 
+;; SHOW EXPENSES LIST FUNCTIONS
+
 (defn expenses-list-start [bot chat-id list total]
   (tg/send-message bot chat-id
                    (str "Список расходов (общее количество - " total "):\n\n" list)
@@ -202,3 +212,48 @@
                                                       {:text "→" :callback_data "CMD_RIGHT"}]
                                                      [{:text "Закрыть" :callback_data "CMD_CANCEL"}]]
                                    :resize_keyboard true}}))
+
+;; EDIT EXPENSE FUNCTIONS
+
+(defn edit-expenses-list-start [bot chat-id list total]
+  (tg/send-message bot chat-id
+                   (str "Список расходов (общее количество - " total "):\n\n")
+                   {:reply_markup list}))
+
+(defn edit-expenses-list [bot chat-id list total message-id]
+  (tg/edit-message-text bot chat-id message-id
+                   (str "Список расходов (общее количество - " total "):\n\n")
+                   {:reply_markup list}))
+
+(defn edit-expense-loop [bot chat-id category amount date comment]
+  (tg/send-message bot chat-id
+                   (str (format "• Категория: %s\n• Сумма: %s тг\n• Время: %s\n• Комментарий: %s"
+                                category (new-expense/divide-numbers (new-expense/pretty-amount amount)) date
+                                (if (> (count comment) 0)
+                                  comment
+                                  "нет"))
+                        "\n\nВыберите, что вы хотите изменить в этом расходе:")
+                   {:reply_markup {:inline_keyboard [[{:text "Категория" :callback_data "CMD_EDIT_EXPENSE_CATEGORY"}]
+                                                     [{:text "Сумма" :callback_data "CMD_EDIT_EXPENSE_AMOUNT"}]
+                                                     [{:text "Время" :callback_data "CMD_EDIT_EXPENSE_TIME"}]
+                                                     [{:text "Комментарий" :callback_data "CMD_EDIT_EXPENSE_COMMENT"}]
+                                                     [{:text "✅ Сохранить" :callback_data "CMD_EDIT_EXPENSE_SAVE"}]
+                                                     [{:text "🗑️ Удалить" :callback_data "CMD_DELETE_EXPENSE"}]
+                                                     [{:text "❌ Закрыть" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
+
+(defn edit-expense-amount [bot chat-id]
+  (tg/send-message bot chat-id "Введите новую сумму для этого расхода"))
+
+(defn edit-expense-is-sure [bot chat-id]
+  (tg/send-message bot chat-id
+                   "Вы уверены? После удаления вернуть расход не получится"
+                   {:reply_markup {:inline_keyboard [[{:text "Уверен" :callback_data "CMD_DELETE_EXPENSE_YES"}]
+                                                     [{:text "Отменить удаление" :callback_data "CMD_DELETE_EXPENSE_NO"}]]
+                                   :resize_keyboard true}}))
+
+(defn expense-deleted [bot chat-id]
+  (tg/send-message bot chat-id "Расход успешно удалён"))
+
+(defn edit-expense-saved [bot chat-id]
+  (tg/send-message bot chat-id "Изменения сохранены — расход обновлён"))

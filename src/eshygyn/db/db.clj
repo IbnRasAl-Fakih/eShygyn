@@ -21,14 +21,17 @@
 (defn get-expenses-with-offset [chat-id offset]
   (jdbc/execute! config/datasource (sql/format (sql-maps/get-expenses-with-offset chat-id config/expenses-limit offset))))
 
+(defn get-expense-by-index [chat-id offset]
+  (first (jdbc/execute! config/datasource (sql/format (sql-maps/get-expenses-with-offset chat-id 1 offset)))))
+
 (defn get-number-of-expenses [chat-id]
   (first (jdbc/execute! config/datasource (sql/format (sql-maps/get-number-of-expenses chat-id)))))
 
-(defn create-expence [user-id category amount date comment]
+(defn create-expense [user-id category amount date comment]
   (try
-    (jdbc/execute! config/datasource (sql/format (sql-maps/create-expence user-id category amount date (str comment))))
+    (jdbc/execute! config/datasource (sql/format (sql-maps/create-expense user-id category amount date (str comment))))
     (catch Exception e
-      (println "\033[91mERROR\033[0m" "Ошибка во время создания расхода (db/create-expence)" e))))
+      (println "\033[91mERROR\033[0m" "Ошибка во время создания расхода (db/create-expense)" e))))
 
 (defn is-authorized [chat-id]
   (< 0 (count (jdbc/execute! config/datasource (sql/format (sql-maps/get-user (str chat-id)))))))
@@ -45,8 +48,20 @@
     (catch Exception e
       (println "\033[91mERROR\033[0m" "Ошибка во время удаления расходов (db/delete-expenses)" e))))
 
-(defn update-expence-category [chat-id title-new title-old]
+(defn update-expense-category [chat-id title-new title-old]
   (try
-    (jdbc/execute! config/datasource (sql/format (sql-maps/update-expence-category chat-id title-new title-old)))
+    (jdbc/execute! config/datasource (sql/format (sql-maps/update-expense-category chat-id title-new title-old)))
     (catch Exception e
-      (println "\033[91mERROR\033[0m" "Ошибка во время редактирование расхода (db/update-expence-category)" e))))
+      (println "\033[91mERROR\033[0m" "Ошибка во время редактирование расхода (db/update-expense-category)" e))))
+
+(defn delete-expense [expense-id]
+  (try
+    (jdbc/execute! config/datasource (sql/format (sql-maps/delete-expense expense-id))) 
+    (catch Exception e
+      (println "\033[91mERROR\033[0m" "Ошибка во время удаление расхода (db/delete-expense)" e))))
+
+(defn update-expense [id category amount when comment]
+  (try
+    (jdbc/execute! config/datasource (sql/format (sql-maps/update-expense id category amount when comment)))
+    (catch Exception e
+      (println "\033[91mERROR\033[0m" "Ошибка во время обновление расхода (db/update-expense)" e))))

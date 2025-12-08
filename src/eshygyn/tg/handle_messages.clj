@@ -17,7 +17,8 @@
    "/delete-category" commands/delete-category
    "/edit-category"   commands/edit-category
    "/settings"        messages/settings-list
-   "/expenses"        commands/expenses-list})
+   "/expenses"        commands/expenses-list
+   "/edit-expenses"   commands/edit-expenses-list})
 
 (defn text-not-listed-handler [bot chat-id stage user-id text draft]
   (cond
@@ -29,19 +30,46 @@
         (messages/wrong-amount bot chat-id)
         (do
           (user-session/set-stage! chat-id :enter-time :amount amt)
-          (messages/next-time bot chat-id))))
+          (messages/next-time bot chat-id "CREATE_"))))
 
     (= stage :enter-time)
     (let [dt (new-expense/parse-datetime text)]
       (if (nil? dt)
-        (messages/wrong-time bot chat-id)
+        (messages/wrong-time bot chat-id "CREATE_")
         (do
           (user-session/set-stage! chat-id :enter-comment :when dt)
-          (messages/next-comment bot chat-id))))
+          (messages/next-comment bot chat-id "CMD_SKIP_COMMENT"))))
 
     (= stage :enter-comment)
     (let [{:keys [category amount when]} draft]
       (commands/skip-comment bot chat-id user-id category amount when text))
+    
+    (= stage :edit-expense-amount)
+    (let [amt (new-expense/parse-amount text)
+          {:keys [category when comment]} draft]
+      (if (nil? amt)
+        (messages/wrong-amount bot chat-id)
+        (do
+          (user-session/set-stage! chat-id :edit-expense {:amount amt})
+          (messages/edit-expense-loop bot chat-id category amt when comment))))
+    
+    (= stage :edit-expense-time)
+    (let [dt (new-expense/parse-datetime text)
+          date (.format dt new-expense/fmt-out)
+          {:keys [category amount comment]} draft]
+      (if (nil? dt)
+        (messages/wrong-time bot chat-id "EDIT_")
+        (do
+          (user-session/set-stage! chat-id :edit-expense {:when date})
+          (messages/edit-expense-loop bot chat-id category amount date comment))))
+    
+    (= stage :edit-expense-comment)
+    (let [{:keys [category amount when]} draft]
+      (if (> (count text) 300)
+        (messages/comment-error bot chat-id "CMD_EDIT_EXPENSE_SKIP_COMMENT")
+        (do
+          (user-session/set-stage! chat-id :edit-expense {:comment text})
+          (messages/edit-expense-loop bot chat-id category amount when text))))
 
     (= stage :enter-category-id)
     (let [parsed-id (tg-category/parse-text text)

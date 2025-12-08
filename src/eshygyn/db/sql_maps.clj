@@ -16,6 +16,7 @@
   {:select [:*]
    :from [:expenses]
    :where [:= :user_id chat-id]
+   :order-by [[:date :desc]]
    :limit limit
    :offset offset})
 
@@ -24,7 +25,7 @@
    :from [:expenses]
    :where [:= :user_id chat-id]})
 
-(defn create-expence [user-id category amount date comment]
+(defn create-expense [user-id category amount date comment]
   {:insert-into [:expenses]
    :columns [:user_id :category :amount :date :comment]
    :values [{:user_id user-id, :category category, :amount amount, :date date, :comment comment}]})
@@ -45,9 +46,18 @@
            [:= :user_id chat-id]
            [:= :category category-title]]})
 
-(defn update-expence-category [user-id title-new title-old]
+(defn update-expense-category [user-id title-new title-old]
   {:update [:expenses]
    :set {:category title-new}
    :where [:and
            [:= :user_id user-id]
            [:= :category title-old]]})
+
+(defn delete-expense [expense-id]
+  {:delete-from [:expenses]
+   :where [:= :id expense-id]})
+
+(defn update-expense [id category amount when comment]
+  {:update [:expenses]
+   :set {:category category, :amount amount, :date when, :comment comment}
+   :where [:= :id id]})

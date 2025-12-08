@@ -8,6 +8,7 @@
            (java.time.format DateTimeFormatter DateTimeParseException)))
 
 (def fmt-out (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm"))
+(def fmt-db (DateTimeFormatter/ofPattern "yyyy-MM-dd HH:mm:ssXXX"))
 
 (def almaty-tz (ZoneId/of "Asia/Almaty"))
 
@@ -20,13 +21,13 @@
           (map vec)
           vec)}))
 
-(defn time-kb []
-  {:inline_keyboard [[{:text "🕒 Текущее время" :callback_data "CMD_TIME_NOW"}]
-                     [{:text "15 минут назад" :callback_data "TIME_15"}]
-                     [{:text "30 минут назад" :callback_data "TIME_30"}]
-                     [{:text "1 час назад" :callback_data "TIME_60"}]
-                     [{:text "2 часа назад" :callback_data "TIME_120"}]
-                     [{:text "3 часа назад" :callback_data "TIME_180"}]
+(defn time-kb [prefix]
+  {:inline_keyboard [[{:text "🕒 Текущее время" :callback_data (str prefix "TIME_NOW")}]
+                     [{:text "15 минут назад" :callback_data (str prefix "TIME_15")}]
+                     [{:text "30 минут назад" :callback_data (str prefix "TIME_30")}]
+                     [{:text "1 час назад" :callback_data (str prefix "TIME_60")}]
+                     [{:text "2 часа назад" :callback_data (str prefix "TIME_120")}]
+                     [{:text "3 часа назад" :callback_data (str prefix "TIME_180")}]
                      [{:text "❌ Отмена" :callback_data "CMD_CANCEL"}]]})
 
 (defn javatimestamp->zoneddatetime [date]
@@ -102,3 +103,19 @@
     offset
     0))
     
+(defn edit-expenses-list [chat-id offset prefix]
+  (mapv
+   (fn [idx {:keys [expenses/category expenses/amount expenses/date]}]
+     [{:text (str (inc (+ offset idx)) ". "
+                  (divide-numbers (pretty-amount amount)) "тг - "
+                  category " - "
+                  (javatimestamp->zoneddatetime date))
+       :callback_data (str prefix (str/upper-case (str (+ offset idx))))}])
+   (range)
+   (db/get-expenses-with-offset chat-id offset)))
+
+(defn edit-expenses-list-with-arrows [chat-id offset prefix]
+  (let [list (edit-expenses-list chat-id offset prefix)]
+    {:inline_keyboard (conj list [{:text "←" :callback_data "CMD_LEFT_EDIT"}
+                                  {:text "→" :callback_data "CMD_RIGHT_EDIT"}]
+                            [{:text "Закрыть" :callback_data "CMD_CANCEL"}])}))
