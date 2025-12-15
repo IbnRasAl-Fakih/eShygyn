@@ -22,7 +22,7 @@
    "/commands"        messages/list-of-commands
    "Добавить расход"  commands/add-expense
    "Команды"          messages/list-of-commands
-   "help"             messages/start})
+   "/help"             messages/start})
 
 (defn text-not-listed-handler [bot chat-id stage user-id text draft]
   (cond
