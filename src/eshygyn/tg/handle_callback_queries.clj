@@ -165,23 +165,39 @@
    "CMD_DELETE_EXPENSE"
    (fn [bot chat-id & _]
      (messages/edit-expense-is-sure bot chat-id))
-   
+
    "CMD_DELETE_EXPENSE_YES"
    (fn [bot chat-id _ _ draft _]
      (let [expense-id (:id draft)]
        (db/delete-expense expense-id)
        (messages/expense-deleted bot chat-id)))
-   
+
    "CMD_DELETE_EXPENSE_NO"
    (fn [bot chat-id _ _ draft _]
      (let [{:keys [category amount when comment]} draft]
        (messages/edit-expense-loop bot chat-id category amount when comment)))
-   
+
    "CMD_EDIT_EXPENSE_SAVE"
    (fn [bot chat-id _ _ draft _]
      (let [{:keys [id category amount when comment]} draft]
        (commands/update-expense id category amount when comment)
        (messages/edit-expense-saved bot chat-id)))
+
+   "CMD_ADD"
+   (fn [bot chat-id & _]
+     (commands/add-expense bot chat-id))
+
+   "CMD_LIST_OF_EXPENSES"
+   (fn [bot chat-id & _]
+     (commands/expenses-list bot chat-id))
+
+   "CMD_EDIT_EXPENSES"
+   (fn [bot chat-id & _]
+     (commands/edit-expenses-list bot chat-id))
+
+   "CMD_SETTINGS_LIST"
+   (fn [bot chat-id & _]
+     (messages/settings-list bot chat-id))
    })
 
 (defn query-not-listed-handler [data bot chat-id draft]

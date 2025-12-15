@@ -5,12 +5,16 @@
 
 ;; GLOBAL MESSAGES
 
-;; TODO: нужно изменить текст когда все будет готово 
 (defn start [bot chat-id]
-  (tg/send-message bot chat-id "Привет! 👋 Я твой Expense Tracker бот. Отправь мне любое сообщение."))
+  (tg/send-message bot chat-id "👋 Добро пожаловать!\n\nЯ — твой личный бот для учёта расходов 💸\nПомогу:\n  •быстро добавлять расходы\n  •управлять категориями\n  •следить за тратами без лишних таблиц"
+                   {:reply_markup
+                    {:keyboard [[{:text "Добавить расход" :callback_data "CMD_ADD"} {:text "Команды" :callback_data "CMD_LIST_OF_COMMANDS"}]]
+                     :resize_keyboard true
+                     :one_time_keyboard false
+                     :is_persistent true}}))
 
 (defn cancel [bot chat-id]
-  (tg/send-message bot chat-id "❌ Действие отменено. Если понадобится — можете начать заново."))
+  (tg/send-message bot chat-id "❌ Действие отменено. Если понадобится — можете начать заново"))
 
 (defn unknown-command [bot chat-id command]
   (tg/send-message bot chat-id (str "❓ Неизвестная команда: " command "\n\nПопробуй /help, чтобы увидеть, что я умею")))
@@ -257,3 +261,12 @@
 
 (defn edit-expense-saved [bot chat-id]
   (tg/send-message bot chat-id "Изменения сохранены — расход обновлён"))
+
+(defn list-of-commands [bot chat-id]
+  (tg/send-message bot chat-id "Вот список доступных команд 👇"
+                   {:reply_markup {:inline_keyboard [[{:text "Добавить новый расход" :callback_data "CMD_ADD"}]
+                                                     [{:text "Список расходов" :callback_data "CMD_LIST_OF_EXPENSES"}]
+                                                     [{:text "Управление расходами" :callback_data "CMD_EDIT_EXPENSES"}]
+                                                     [{:text "Настройки" :callback_data "CMD_SETTINGS_LIST"}]
+                                                     [{:text "Отмена" :callback_data "CMD_CANCEL"}]]
+                                   :resize_keyboard true}}))
